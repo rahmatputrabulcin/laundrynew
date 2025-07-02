@@ -9,7 +9,30 @@ const statusOptions = [
   { value: "antar", label: "Antar" },
 ];
 
-export default function Show({ transaction, auth ,statusLogs }) {
+// Helper function untuk format tanggal Indonesia
+const formatDateIndonesia = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+const formatDateTimeIndonesia = (dateString) => {
+  if (!dateString) return '-';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
+export default function Show({ transaction, auth, statusLogs }) {
   const { data, setData, patch, processing } = useForm({
     status: transaction.status,
   });
@@ -21,6 +44,7 @@ export default function Show({ transaction, auth ,statusLogs }) {
       preserveState: false,
     });
   };
+
   if (!transaction || typeof transaction !== "object") {
     return (
       <div className="text-center mt-10 text-red-600">
@@ -91,6 +115,7 @@ export default function Show({ transaction, auth ,statusLogs }) {
             </a>
           )}
         </div>
+
         <div className="mb-4">
           <form>
             <label className="block font-semibold mb-1">Status Laundry</label>
@@ -122,18 +147,27 @@ export default function Show({ transaction, auth ,statusLogs }) {
             </button>
           </form>
         </div>
+
         <div className="mb-4">
           <strong>Invoice:</strong> {transaction.invoice_number || "-"}
         </div>
+
+        <div className="mb-4">
+          <strong>Tanggal Transaksi:</strong> {formatDateIndonesia(transaction.transaction_date)}
+        </div>
+
         <div className="mb-4">
           <strong>Customer:</strong> {transaction.customer?.name || "-"}
         </div>
+
         <div className="mb-4">
           <strong>Status:</strong> {transaction.status || "-"}
         </div>
+
         <div className="mb-4">
           <strong>Total:</strong> Rp {totalAmount.toLocaleString()}
         </div>
+
         <div className="mb-4">
           <strong>Discount:</strong>{" "}
           {transaction.discount_type === "amount"
@@ -142,12 +176,15 @@ export default function Show({ transaction, auth ,statusLogs }) {
             ? `${discountValue}%`
             : "-"}
         </div>
+
         <div className="mb-4">
           <strong>Final Total:</strong> Rp {finalTotal.toLocaleString()}
         </div>
+
         <div className="mb-4">
           <strong>Paid:</strong> Rp {paidAmount.toLocaleString()}
         </div>
+
         <div className="mb-4">
           <strong>Status Pembayaran:</strong>{" "}
           <span
@@ -160,20 +197,19 @@ export default function Show({ transaction, auth ,statusLogs }) {
             {transaction.payment_status || "-"}
           </span>
         </div>
+
         <div className="mb-4">
           <strong>Remaining:</strong> Rp {remaining.toLocaleString()}
         </div>
+
         <div className="mb-4">
-          <strong>Estimated Completion:</strong>{" "}
-          {transaction.estimated_completion
-            ? new Date(transaction.estimated_completion).toLocaleDateString(
-                "en-CA"
-              )
-            : "-"}
+          <strong>Estimated Completion:</strong> {formatDateIndonesia(transaction.estimated_completion)}
         </div>
+
         <div className="mb-4">
           <strong>Notes:</strong> {transaction.notes || "-"}
         </div>
+
         <div className="mb-4">
           <strong>Details:</strong>
           <table className="min-w-full mt-2 border">
@@ -217,13 +253,14 @@ export default function Show({ transaction, auth ,statusLogs }) {
             </tbody>
           </table>
         </div>
+
         {statusLogs && statusLogs.length > 0 && (
           <div className="mb-4">
             <strong>Riwayat Status:</strong>
             <ul className="mt-2 text-sm">
               {statusLogs.map((log) => (
                 <li key={log.id}>
-                  {log.created_at} — <b>{log.old_status}</b> →{" "}
+                  {formatDateTimeIndonesia(log.created_at)} — <b>{log.old_status}</b> →{" "}
                   <b>{log.new_status}</b>
                   {log.user && (
                     <>

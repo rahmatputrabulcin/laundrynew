@@ -12,6 +12,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'invoice_number',
+        'transaction_date',
         'customer_id',
         'total_amount',
         'discount',
@@ -31,6 +32,7 @@ class Transaction extends Model
         'total_amount' => 'decimal:2',
         'discount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
+        'transaction_date' => 'date',
         'estimated_completion' => 'datetime',
         'completed_at' => 'datetime',
         'delivered_at' => 'datetime',

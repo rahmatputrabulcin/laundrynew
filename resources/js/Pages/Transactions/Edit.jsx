@@ -18,6 +18,7 @@ export default function Edit({ transaction, customers, services, auth }) {
         notes: transaction.notes || '',
         estimated_completion: transaction.estimated_completion ? transaction.estimated_completion.substr(0, 10) : '',
         status: transaction.status || 'pending',
+        transaction_date: transaction.transaction_date || '',
     });
 
     // Hitung total sebelum diskon
@@ -47,7 +48,7 @@ export default function Edit({ transaction, customers, services, auth }) {
     };
 
     const addItem = () => {
-        setData('items', [...data.items, { service_id: '', quantity: 1, is_express: false, notes: '' }]);
+        setData('items', [...data.items, { service_id: '', quantity: 0.1, is_express: false, notes: '' }]);
     };
 
     const removeItem = (idx) => {
@@ -94,7 +95,15 @@ export default function Edit({ transaction, customers, services, auth }) {
                                 <option value="">-- Service --</option>
                                 {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
-                            <input type="number" min="1" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} className="border rounded px-2 py-1 w-20" />
+                           <input
+    type="number"
+    min="0.1"
+    step="any"
+    value={item.quantity}
+    onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
+    className="border rounded px-2 py-1 w-20"
+    placeholder="kg"
+/>
                             <label>
                                 <input type="checkbox" checked={item.is_express} onChange={e => handleItemChange(idx, 'is_express', e.target.checked)} /> Express
                             </label>
@@ -137,8 +146,23 @@ export default function Edit({ transaction, customers, services, auth }) {
                     </select>
                 </div>
                 <div>
+                    <label className="block">Tanggal Transaksi</label>
+                    <input
+                        type="date"
+                        value={data.transaction_date || ''}
+                        onChange={e => setData('transaction_date', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                    />
+                    {errors.transaction_date && <div className="text-red-500 text-sm">{errors.transaction_date}</div>}
+                </div>
+                <div>
                     <label className="block">Estimated Completion</label>
-                    <input type="date" value={data.estimated_completion} onChange={e => setData('estimated_completion', e.target.value)} className="w-full border rounded px-2 py-1" />
+                    <input
+                        type="date"
+                        value={data.estimated_completion}
+                        onChange={e => setData('estimated_completion', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                    />
                 </div>
                 <div>
                     <label className="block">Notes</label>

@@ -62,9 +62,10 @@ class TransactionController extends Controller
         $request->validate([
             'invoice_number' => 'required|string|unique:transactions',
             'customer_id' => 'required|exists:customers,id',
+            'transaction_date' => 'required|date', // Tambah validasi ini
             'items' => 'required|array|min:1',
             'items.*.service_id' => 'required|exists:services,id',
-            'items.*.quantity' => 'required|numeric|min:0.01',
+            'items.*.quantity' => 'required|numeric|min:0.1',
             'items.*.is_express' => 'boolean',
             'total_amount' => 'required|numeric|min:0',
             'discount_type' => 'nullable|in:amount,percent',
@@ -152,8 +153,20 @@ class TransactionController extends Controller
 
     public function update(Request $request, Transaction $transaction)
     {
+         // Debug - tambahkan ini sementara
+        // \Log::info('Update method called', [
+        //     'transaction_id' => $transaction->id,
+        //     'request_data' => $request->all()
+        // ]);
+
+        // Atau gunakan dd() untuk debug langsung
+        // dd('Update method reached', $request->all(), $transaction->id);
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
+            'transaction_date' => 'required|date', // Tambah validasi ini
+            'items' => 'sometimes|array', // Tambahkan ini jika ada items
+            'items.*.service_id' => 'sometimes|exists:services,id',
+            'items.*.quantity' => 'required|numeric|min:0.1',
             'discount_type' => 'nullable|in:amount,percent',
             'discount_value' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -165,6 +178,16 @@ class TransactionController extends Controller
 
         // Hitung final_total
         $totalAmount = $transaction->total_amount;
+
+        // Jika ada update items, hitung ulang total
+        if ($request->has('items')) {
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $service = Service::find($item['service_id']);
+                $totalAmount += $service->price * $item['quantity'];
+            }
+        }
+
         $discountType = $request->discount_type;
         $discountValue = $request->discount_value ?? 0;
         $finalTotal = $totalAmount;
@@ -178,6 +201,7 @@ class TransactionController extends Controller
 
         $transaction->update([
             'customer_id' => $request->customer_id,
+            'total_amount' => $totalAmount, // Update total jika ada perubahan items
             'discount_type' => $discountType,
             'discount_value' => $discountValue,
             'final_total' => $finalTotal,
@@ -188,11 +212,25 @@ class TransactionController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Update status-specific timestamps
-        if ($request->status === 'completed' && !$transaction->completed_at) {
-            $transaction->update(['completed_at' => now()]);
-        } elseif ($request->status === 'delivered' && !$transaction->delivered_at) {
-            $transaction->update(['delivered_at' => now()]);
+        // Update items jika ada
+        if ($request->has('items')) {
+            // Hapus detail lama
+            $transaction->details()->delete();
+
+            // Tambah detail baru
+            foreach ($request->items as $item) {
+                $service = Service::find($item['service_id']);
+                $price = $service->price;
+                $subtotal = $price * $item['quantity'];
+                $transaction->details()->create([
+                    'service_id' => $item['service_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $price,
+                    'subtotal' => $subtotal,
+                    'is_express' => $item['is_express'] ?? false,
+                    'notes' => $item['notes'] ?? null,
+                ]);
+            }
         }
 
         return redirect()->route('transactions.show', $transaction->id)
@@ -274,41 +312,41 @@ class TransactionController extends Controller
         ]);
     }
 
-public function export(Request $request)
-{
-    $filters = $request->only(['status', 'customer_name', 'date_start', 'date_end']);
-    return Excel::download(new TransactionsExport($filters), 'transactions.xlsx');
-}
-
-public function exportPdf(Request $request)
-{
-    $query = Transaction::with('customer');
-
-    if ($request->status) {
-        $query->where('status', $request->status);
-    }
-    if ($request->customer_name) {
-        $query->whereHas('customer', function ($q) use ($request) {
-            $q->where('name', 'like', '%' . $request->customer_name . '%');
-        });
-    }
-    if ($request->date_start) {
-        $query->whereDate('created_at', '>=', $request->date_start);
-    }
-    if ($request->date_end) {
-        $query->whereDate('created_at', '<=', $request->date_end);
+    public function export(Request $request)
+    {
+        $filters = $request->only(['status', 'customer_name', 'date_start', 'date_end']);
+        return Excel::download(new TransactionsExport($filters), 'transactions.xlsx');
     }
 
-    $transactions = $query->get();
+    public function exportPdf(Request $request)
+    {
+        $query = Transaction::with('customer');
 
-    $pdf = Pdf::loadView('exports.transactions_pdf', compact('transactions'));
-    return $pdf->download('transactions.pdf');
-}
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+        if ($request->customer_name) {
+            $query->whereHas('customer', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->customer_name . '%');
+            });
+        }
+        if ($request->date_start) {
+            $query->whereDate('created_at', '>=', $request->date_start);
+        }
+        if ($request->date_end) {
+            $query->whereDate('created_at', '<=', $request->date_end);
+        }
 
-public function printPdf(Transaction $transaction)
-{
-    $transaction->load(['customer', 'details.service']);
-    $pdf = Pdf::loadView('exports.transaction_struk', compact('transaction'));
-    return $pdf->download('struk-'.$transaction->invoice_number.'.pdf');
-}
+        $transactions = $query->get();
+
+        $pdf = Pdf::loadView('exports.transactions_pdf', compact('transactions'));
+        return $pdf->download('transactions.pdf');
+    }
+
+    public function printPdf(Transaction $transaction)
+    {
+        $transaction->load(['customer', 'details.service']);
+        $pdf = Pdf::loadView('exports.transaction_struk', compact('transaction'));
+        return $pdf->download('struk-' . $transaction->invoice_number . '.pdf');
+    }
 }

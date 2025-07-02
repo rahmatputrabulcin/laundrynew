@@ -3,17 +3,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function Create({ customers, services, invoiceNumber, auth }) {
-    const { data, setData, post, errors, processing } = useForm({
-        invoice_number: invoiceNumber,
+    const { data, setData, post, processing, errors } = useForm({
         customer_id: '',
-        items: [{ service_id: '', quantity: 1, is_express: false, notes: '' }],
+        transaction_date: new Date().toISOString().slice(0, 10), // Default hari ini
+        estimated_completion: '',
+        items: [{ service_id: '', quantity: 0.1, is_express: false, notes: '' }], // ← UBAH DARI 1 KE 0.1
         total_amount: 0,
         discount_type: 'amount',
         discount_value: 0,
         paid_amount: 0,
         payment_status: 'belum lunas',
         notes: '',
-        estimated_completion: '',
+        invoice_number: invoiceNumber,
     });
 
     // Hitung total sebelum diskon
@@ -44,7 +45,7 @@ export default function Create({ customers, services, invoiceNumber, auth }) {
     };
 
     const addItem = () => {
-        setData('items', [...data.items, { service_id: '', quantity: 1, is_express: false, notes: '' }]);
+        setData('items', [...data.items, { service_id: '', quantity: 0.1, is_express: false, notes: '' }]);
     };
 
     const removeItem = (idx) => {
@@ -102,7 +103,15 @@ export default function Create({ customers, services, invoiceNumber, auth }) {
                                 <option value="">-- Service --</option>
                                 {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                             </select>
-                            <input type="number" min="1" value={item.quantity} onChange={e => handleItemChange(idx, 'quantity', e.target.value)} className="border rounded px-2 py-1 w-20" />
+                           <input
+    type="number"
+    min="0.1"
+    step="any"
+    value={item.quantity}
+    onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
+    className="border rounded px-2 py-1 w-20"
+    placeholder="kg"
+/>
                             <label>
                                 <input type="checkbox" checked={item.is_express} onChange={e => handleItemChange(idx, 'is_express', e.target.checked)} /> Express
                             </label>
@@ -145,8 +154,24 @@ export default function Create({ customers, services, invoiceNumber, auth }) {
                     </select>
                 </div>
                 <div>
+                    <label className="block">Tanggal Transaksi</label>
+                    <input
+                        type="date"
+                        value={data.transaction_date || ''}
+                        onChange={e => setData('transaction_date', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                    />
+                    {errors.transaction_date && <div className="text-red-500 text-sm">{errors.transaction_date}</div>}
+                </div>
+                <div>
                     <label className="block">Estimated Completion</label>
-                    <input type="date" value={data.estimated_completion} onChange={e => setData('estimated_completion', e.target.value)} className="w-full border rounded px-2 py-1" />
+                    <input
+                        type="date"
+                        value={data.estimated_completion || ''}
+                        onChange={e => setData('estimated_completion', e.target.value)}
+                        className="w-full border rounded px-2 py-1"
+                    />
+                    {errors.estimated_completion && <div className="text-red-500 text-sm">{errors.estimated_completion}</div>}
                 </div>
                 <div>
                     <label className="block">Notes</label>
