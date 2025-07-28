@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,18 +12,21 @@ class TransactionDetail extends Model
     protected $fillable = [
         'transaction_id',
         'service_id',
+        'product_id',
         'quantity',
         'price',
-        'is_express',
         'subtotal',
-        'notes',
+        'is_express',
+        'express_fee',
+        'notes'
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:2',
+        'quantity' => 'decimal:3',
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
-        'is_express' => 'boolean',
+        'express_fee' => 'decimal:2',
+        'is_express' => 'boolean'
     ];
 
     // Relasi ke transaksi induk
@@ -35,5 +39,11 @@ class TransactionDetail extends Model
     public function service()
     {
         return $this->belongsTo(Service::class);
+    }
+
+    // Relasi ke produk
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
     }
 }

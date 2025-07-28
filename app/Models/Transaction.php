@@ -2,41 +2,59 @@
 
 namespace App\Models;
 
-use App\Traits\Blameable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    use HasFactory, Blameable;
+    use HasFactory;
 
     protected $fillable = [
         'invoice_number',
-        'transaction_date',
         'customer_id',
-        'total_amount',
-        'discount',
-        'paid_amount',
-        'status',
+        'transaction_date',
         'estimated_completion',
-        'completed_at',
-        'delivered_at',
-        'notes',
+        'total_amount',
+        'final_total',
+        'paid_amount',
+        'payment_status',
+        'status',
         'discount_type',
         'discount_value',
-        'final_total',
-        'payment_status',
+        'notes'
     ];
 
     protected $casts = [
+        'transaction_date' => 'date:Y-m-d', // ← Format tanggal
+        'estimated_completion' => 'date:Y-m-d', // ← Format tanggal
         'total_amount' => 'decimal:2',
-        'discount' => 'decimal:2',
+        'final_total' => 'decimal:2',
         'paid_amount' => 'decimal:2',
-        'transaction_date' => 'date',
-        'estimated_completion' => 'datetime',
-        'completed_at' => 'datetime',
-        'delivered_at' => 'datetime',
+        'discount_value' => 'decimal:2',
+        'status' => 'string',
+        'payment_status' => 'string'
     ];
+    // Mutator: pastikan status dan payment_status selalu string
+    public function setStatusAttribute($value)
+    {
+        $this->attributes['status'] = is_string($value) ? $value : (string)$value;
+    }
+
+    public function setPaymentStatusAttribute($value)
+    {
+        $this->attributes['payment_status'] = is_string($value) ? $value : (string)$value;
+    }
+
+    // Accessor untuk memastikan format tanggal konsisten
+    public function getTransactionDateAttribute($value)
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    }
+
+    public function getEstimatedCompletionAttribute($value)
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
+    }
 
     // Relasi ke customer
     public function customer()
@@ -49,21 +67,24 @@ class Transaction extends Model
     {
         return $this->hasMany(TransactionDetail::class);
     }
-
-    // Sisa pembayaran
-    public function getRemainingAmountAttribute()
+    // Mutator: pastikan field decimal selalu float, walau input string/null
+    public function setTotalAmountAttribute($value)
     {
-        return $this->total_amount - $this->discount - $this->paid_amount;
+        $this->attributes['total_amount'] = is_numeric($value) ? (float)$value : 0;
     }
 
-    // Status lunas
-    public function getIsPaidAttribute()
+    public function setFinalTotalAttribute($value)
     {
-        return $this->remaining_amount <= 0;
+        $this->attributes['final_total'] = is_numeric($value) ? (float)$value : 0;
     }
 
-    public function statusLogs()
+    public function setPaidAmountAttribute($value)
     {
-        return $this->hasMany(StatusLog::class);
+        $this->attributes['paid_amount'] = is_numeric($value) ? (float)$value : 0;
+    }
+
+    public function setDiscountValueAttribute($value)
+    {
+        $this->attributes['discount_value'] = is_numeric($value) ? (float)$value : 0;
     }
 }

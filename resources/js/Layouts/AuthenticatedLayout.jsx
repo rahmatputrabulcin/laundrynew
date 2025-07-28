@@ -71,6 +71,9 @@ export default function AuthenticatedLayout({ header, children }) {
   <Dropdown.Content>
     <Dropdown.Link href={route("reports.transactions")}>Laporan Transaksi</Dropdown.Link>
     <Dropdown.Link href={route("jobs.report")}>Laporan Pekerjaan</Dropdown.Link>
+    <Dropdown.Link href={route("reports.newreport")}>
+  Laporan Baru
+</Dropdown.Link>
   </Dropdown.Content>
 </Dropdown>
                 <NavLink
@@ -222,6 +225,9 @@ export default function AuthenticatedLayout({ header, children }) {
             >
               Laporan Pekerjaan
             </ResponsiveNavLink>
+            <ResponsiveNavLink href={route("reports.newreport")}>
+  Laporan Baru
+</ResponsiveNavLink>
           </div>
           <ResponsiveNavLink
             href={route("transactions.index")}

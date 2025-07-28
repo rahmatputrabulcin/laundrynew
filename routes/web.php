@@ -10,6 +10,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WageController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -23,38 +24,59 @@ Route::get('/', function () {
     ]);
 });
 
-// Route untuk authenticated users
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
+
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
-    // Resource routes (semua role authenticated bisa akses)
-    Route::resource('jobs', JobController::class);
-    Route::resource('products', ProductController::class);
+
+    // Customer routes
     Route::resource('customers', CustomerController::class);
+    
+    // Service routes  
     Route::resource('services', ServiceController::class);
+    
+    // Product routes
+    Route::resource('products', ProductController::class);
+    
+    // Transaction routes
     Route::resource('transactions', TransactionController::class);
-    Route::resource('expenses', ExpenseController::class);
-    Route::resource('wages', WageController::class);
     
-    // Custom routes untuk transactions
-    Route::put('transactions/{transaction}/status', [TransactionController::class, 'updateStatus'])->name('transactions.updateStatus');
-    Route::put('transactions/{transaction}/payment', [TransactionController::class, 'updatePayment'])->name('transactions.updatePayment');
+    // Additional transaction routes
+    Route::post('transactions/{transaction}/update-status', [TransactionController::class, 'updateStatus'])->name('transactions.update-status');
+    Route::post('transactions/{transaction}/update-payment', [TransactionController::class, 'updatePayment'])->name('transactions.update-payment');
     Route::get('transactions/{transaction}/print', [TransactionController::class, 'print'])->name('transactions.print');
-    Route::get('transactions/{transaction}/print-pdf', [TransactionController::class, 'printPdf'])->name('transactions.printPdf');
-    Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
-    Route::get('/transactions/export-pdf', [TransactionController::class, 'exportPdf'])->name('transactions.exportPdf');
     
-    // Custom routes untuk jobs
-    Route::get('/jobs/{job}/report', [JobController::class, 'singleReport'])->name('jobs.singleReport');
-    Route::get('/jobs/report', [JobController::class, 'report'])->name('jobs.report');
+    // Export routes untuk transactions
+    Route::get('transactions/export/excel', [TransactionController::class, 'export'])->name('transactions.export');
+    Route::get('transactions/export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.exportPdf');
     
-    // Report routes
-    Route::get('reports/transactions', [\App\Http\Controllers\ReportController::class, 'transactions'])->name('reports.transactions');
+    // Expense routes
+    Route::resource('expenses', ExpenseController::class);
+    Route::get('expenses/report', [ExpenseController::class, 'report'])->name('expenses.report');
+    
+    // Job routes
+    Route::resource('jobs', JobController::class);
+    Route::get('jobs/report', [JobController::class, 'report'])->name('jobs.report');
+    
+    // Wage routes
+    Route::resource('wages', WageController::class);
+    Route::get('wages/report', [WageController::class, 'report'])->name('wages.report');
+    
+    // Reports routes
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions');
+        Route::get('/transactions/export', [TransactionController::class, 'export'])->name('transactions.export');
+        Route::get('/transactions/export-pdf', [TransactionController::class, 'exportPdf'])->name('transactions.exportPdf');
+        Route::get('/expenses', [ExpenseController::class, 'report'])->name('expenses');
+        Route::get('/jobs', [JobController::class, 'report'])->name('jobs');
+        Route::get('/wages', [WageController::class, 'report'])->name('wages');
+        Route::get('/newreport', [ReportController::class, 'newreport'])->name('newreport');
+    });
 });
 
 // Route khusus admin
