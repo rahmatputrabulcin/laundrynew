@@ -57,7 +57,7 @@ export default function Print({ transaction }) {
             <div style={{ fontSize: '8px', marginBottom: '1mm' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>INV: {transaction.invoice_number}</span>
-                    <span>CUSTOMER: {transaction.customer?.name}</span>
+                    {/* <span>CUSTOMER: {transaction.customer?.name}</span> */}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span>TGL: {formatDateIndonesia(transaction.transaction_date)}</span>
