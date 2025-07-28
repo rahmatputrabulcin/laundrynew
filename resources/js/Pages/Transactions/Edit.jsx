@@ -89,7 +89,13 @@ export default function Edit({ transaction, customers, services, products, auth 
 
     const updateItem = (index, field, value) => {
         const newItems = [...data.items];
-        newItems[index][field] = value;
+        // Hanya update field yang diubah
+        if (field === 'quantity') {
+            // Jika value kosong, simpan string kosong, jangan 0
+            newItems[index][field] = value === '' ? '' : value;
+        } else {
+            newItems[index][field] = value;
+        }
 
         // Auto-fill price when service/product is selected
         if ((field === 'service_id' || field === 'product_id') && value) {
@@ -128,7 +134,7 @@ export default function Edit({ transaction, customers, services, products, auth 
             type: 'service',
             service_id: '',
             product_id: '',
-            quantity: 0,
+            quantity: '', // default string kosong agar input tidak menampilkan 0.000
             price: 0,
             is_express: false,
             express_fee: 0,
@@ -213,20 +219,25 @@ export default function Edit({ transaction, customers, services, products, auth 
 
         // Validasi dan normalisasi items
         const validItems = data.items
+            .map(item => {
+                let qty = item.quantity;
+                // Selalu konversi ke float, jika gagal parsing, hasilnya NaN
+                if (typeof qty === 'string') {
+                    qty = parseFloat(qty.replace(',', '.'));
+                }
+                return {
+                    ...item,
+                    quantity: qty,
+                    service_id: item.type === 'service' ? item.service_id : null,
+                    product_id: item.type === 'product' ? item.product_id : null
+                };
+            })
             .filter(item => {
                 const hasValidId = (item.type === 'service' && item.service_id) ||
                                   (item.type === 'product' && item.product_id);
-                // Parse quantity (replace comma with dot)
-                const qty = typeof item.quantity === 'string' ? parseFloat(item.quantity.replace(',', '.')) : item.quantity;
-                return hasValidId && qty > 0 && item.price > 0;
-            })
-            .map(item => ({
-                ...item,
-                // Parse quantity to float, replace comma with dot
-                quantity: typeof item.quantity === 'string' ? parseFloat(item.quantity.replace(',', '.')) : item.quantity,
-                service_id: item.type === 'service' ? item.service_id : null,
-                product_id: item.type === 'product' ? item.product_id : null
-            }));
+                // Hanya item dengan quantity > 0 dan price > 0 yang dikirim
+                return hasValidId && typeof item.quantity === 'number' && item.quantity > 0 && item.price > 0;
+            });
 
         if (validItems.length === 0) {
             alert('Silakan tambahkan minimal satu item yang valid');
@@ -433,7 +444,10 @@ export default function Edit({ transaction, customers, services, products, auth 
                                                             id={`qty-${index}`}
                                                             type="text"
                                                             autoComplete="off"
-                                                            value={typeof item.quantity === 'string' ? item.quantity : (item.quantity || '')}
+                                                            value={
+                                                                // Jika quantity kosong atau 0, tampilkan string kosong
+                                                                (item.quantity === '' || item.quantity === 0 || item.quantity === '0' || item.quantity === '0.000') ? '' : item.quantity
+                                                            }
                                                             onChange={e => {
                                                                 let val = e.target.value;
                                                                 // Cek apakah item ini per_kg (boleh desimal) atau bukan (hanya integer)
