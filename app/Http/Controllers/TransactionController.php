@@ -515,7 +515,13 @@ class TransactionController extends Controller
                 // Hitung ulang total dari items
                 $calculatedTotal = 0;
                 foreach ($request->items as $item) {
-                    $itemSubtotal = (is_numeric($item['quantity']) ? $item['quantity'] : 0) * (is_numeric($item['price']) ? $item['price'] : 0);
+                    $qtyRaw = $item['quantity'];
+                    $qty = is_string($qtyRaw) ? str_replace(',', '.', $qtyRaw) : $qtyRaw;
+                    $qty = is_numeric($qty) ? (float)$qty : 0;
+                    $priceRaw = $item['price'];
+                    $price = is_string($priceRaw) ? str_replace(',', '.', $priceRaw) : $priceRaw;
+                    $price = is_numeric($price) ? (float)$price : 0;
+                    $itemSubtotal = $qty * $price;
                     $expressFeé = (isset($item['is_express']) && $item['is_express']) ? (is_numeric($item['express_fee']) ? $item['express_fee'] : 0) : 0;
                     $calculatedTotal += $itemSubtotal + $expressFeé;
                 }
