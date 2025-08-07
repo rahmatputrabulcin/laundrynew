@@ -16,6 +16,16 @@ export default function Show({ transaction, auth }) {
         return `Rp ${parseFloat(amount || 0).toLocaleString('id-ID')}`;
     };
 
+    const formatQuantity = (quantity) => {
+        const num = parseFloat(quantity || 0);
+        // Jika bilangan bulat, tampilkan tanpa desimal
+        if (num % 1 === 0) {
+            return num.toString();
+        }
+        // Jika ada desimal, tampilkan dengan maksimal 3 digit
+        return num.toFixed(3).replace(/\.?0+$/, '');
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -159,7 +169,12 @@ export default function Show({ transaction, auth }) {
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
-                                                        {detail.quantity} {detail.service ? 'kg' : 'pcs'}
+                                                        {formatQuantity(detail.quantity)}
+                                                        {detail.service
+                                                            ? (detail.service.price_type === 'per_kg' ? ' kg' :
+                                                               detail.service.price_type === 'per_item' ? ' item' :
+                                                               ' unit')
+                                                            : ' pcs'}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
                                                         {formatCurrency(detail.price)}
@@ -202,7 +217,7 @@ export default function Show({ transaction, auth }) {
                                             <div className="flex justify-between text-red-600">
                                                 <span>Diskon:</span>
                                                 <span>
-                                                    -{transaction.discount_type === 'amount' 
+                                                    -{transaction.discount_type === 'amount'
                                                         ? formatCurrency(transaction.discount_value)
                                                         : `${transaction.discount_value}%`
                                                     }

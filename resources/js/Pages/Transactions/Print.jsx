@@ -11,6 +11,17 @@ const formatDateIndonesia = (dateString) => {
     });
 };
 
+// Helper function untuk format quantity
+const formatQuantity = (quantity) => {
+    const num = parseFloat(quantity || 0);
+    // Jika bilangan bulat, tampilkan tanpa desimal
+    if (num % 1 === 0) {
+        return num.toString();
+    }
+    // Jika ada desimal, tampilkan dengan maksimal 3 digit
+    return num.toFixed(3).replace(/\.?0+$/, '');
+};
+
 export default function Print({ transaction }) {
     useEffect(() => {
         window.print();
@@ -32,12 +43,12 @@ export default function Print({ transaction }) {
         >
             {/* Spacer untuk menghindari terpotong */}
             <div style={{ height: '5mm' }}></div>
-            
+
             {/* Header - Compact */}
             <div style={{ textAlign: 'center', marginBottom: '2mm' }}>
-                <div style={{ 
-                    fontWeight: 'bold', 
-                    fontSize: '10px', 
+                <div style={{
+                    fontWeight: 'bold',
+                    fontSize: '10px',
                     margin: 0,
                     marginBottom: '1.5mm',
                     letterSpacing: '0.5px'
@@ -77,7 +88,12 @@ export default function Print({ transaction }) {
                     <div style={{ fontWeight: 'bold' }}>
                         {d.service?.name}{d.is_express && ' [EXPRESS]'}
                     </div>
-                    <div>{d.quantity}kg x Rp{parseFloat(d.price).toLocaleString('id-ID')}</div>
+                    <div>
+                        {formatQuantity(d.quantity)}
+                        {d.service?.price_type === 'per_kg' ? 'kg' :
+                         d.service?.price_type === 'per_item' ? ' item' :
+                         ' unit'} x Rp{parseFloat(d.price).toLocaleString('id-ID')}
+                    </div>
                     <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
                         = Rp{parseFloat(d.subtotal).toLocaleString('id-ID')}
                     </div>

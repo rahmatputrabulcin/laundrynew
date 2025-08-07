@@ -22,7 +22,7 @@ class TransactionDetail extends Model
     ];
 
     protected $casts = [
-        'quantity' => 'decimal:3',
+        'quantity' => 'float',
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'express_fee' => 'decimal:2',

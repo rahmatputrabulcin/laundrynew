@@ -5,7 +5,7 @@ import { useState } from "react";
 export default function Index({ transactions, auth, filters, stats, topCustomers, popularServices }) {
   const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  
+
   const { data, setData, get, processing } = useForm({
     search: filters.search || "",
     customer_name: filters.customer_name || "",
@@ -26,7 +26,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
 
   const handleFilter = (e) => {
     e.preventDefault();
-    
+
     // Clean up empty values
     const cleanData = Object.fromEntries(
       Object.entries(data).filter(([key, value]) => {
@@ -34,10 +34,10 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
         return value !== '' && value !== null && value !== undefined;
       })
     );
-    
-    get(route("transactions.index", cleanData), { 
+
+    get(route("transactions.index", cleanData), {
       preserveState: true,
-      preserveScroll: true 
+      preserveScroll: true
     });
   };
 
@@ -48,11 +48,11 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
         return value !== '' && value !== null && value !== undefined;
       })
     );
-    
+
     setData(cleanedFilterData);
-    get(route("transactions.index", cleanedFilterData), { 
+    get(route("transactions.index", cleanedFilterData), {
       preserveState: true,
-      preserveScroll: true 
+      preserveScroll: true
     });
   };
 
@@ -97,13 +97,23 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
     const date = new Date(dateString);
     return date.toLocaleDateString('id-ID', {
       day: '2-digit',
-      month: '2-digit', 
+      month: '2-digit',
       year: 'numeric'
     });
   };
 
   const formatCurrency = (amount) => {
     return `Rp ${parseFloat(amount || 0).toLocaleString('id-ID')}`;
+  };
+
+  const formatQuantity = (quantity) => {
+    const num = parseFloat(quantity || 0);
+    // Jika bilangan bulat, tampilkan tanpa desimal
+    if (num % 1 === 0) {
+      return num.toString();
+    }
+    // Jika ada desimal, tampilkan dengan maksimal 3 digit
+    return num.toFixed(3).replace(/\.?0+$/, '');
   };
 
   const getStatusColor = (status) => {
@@ -151,7 +161,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
       <Head title="Transactions" />
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          
+
           {/* Main Statistics Cards */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
@@ -160,37 +170,37 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                 <div className="text-xl font-bold text-blue-600">{stats.total_transactions}</div>
                 <div className="text-xs text-blue-500">Semua transaksi</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
                 <div className="text-xs text-gray-600">Total Revenue</div>
                 <div className="text-lg font-bold text-green-600">{formatCurrency(stats.total_revenue)}</div>
                 <div className="text-xs text-green-500">Lunas: {stats.lunas_count}</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-purple-500">
                 <div className="text-xs text-gray-600">Total Gross</div>
                 <div className="text-lg font-bold text-purple-600">{formatCurrency(stats.total_gross)}</div>
                 <div className="text-xs text-purple-500">Semua tagihan</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-red-500">
                 <div className="text-xs text-gray-600">Sisa Tagihan</div>
                 <div className="text-lg font-bold text-red-600">{formatCurrency(stats.total_amount_due)}</div>
                 <div className="text-xs text-red-500">Belum lunas: {stats.unpaid_count}</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
                 <div className="text-xs text-gray-600">Hari Ini</div>
                 <div className="text-lg font-bold text-yellow-600">{stats.today_transactions}</div>
                 <div className="text-xs text-yellow-500">{formatCurrency(stats.today_total)}</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-indigo-500">
                 <div className="text-xs text-gray-600">Bulan Ini</div>
                 <div className="text-lg font-bold text-indigo-600">{stats.month_transactions}</div>
                 <div className="text-xs text-indigo-500">{formatCurrency(stats.month_total)}</div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow border-l-4 border-orange-500">
                 <div className="text-xs text-gray-600">Express</div>
                 <div className="text-lg font-bold text-orange-600">{stats.express_count}</div>
@@ -305,7 +315,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                     <div className="flex justify-between">
                       <span>Completion Rate:</span>
                       <span className="font-bold text-blue-600">
-                        {stats.total_transactions > 0 ? 
+                        {stats.total_transactions > 0 ?
                           Math.round((stats.completed_count + stats.delivered_count) / stats.total_transactions * 100) : 0
                         }%
                       </span>
@@ -472,7 +482,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
           </div>
 
           <div className="bg-white shadow-sm sm:rounded-lg">
-            
+
             {/* Filter Section */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex justify-between items-center mb-4">
@@ -514,7 +524,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                       <option value="cancelled">Cancelled</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium mb-1">Status Pembayaran</label>
                     <select
@@ -593,7 +603,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <label className="block text-sm font-medium mb-1">Sort By</label>
@@ -659,7 +669,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th 
+                    <th
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('invoice_number')}
                     >
@@ -668,13 +678,13 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Pelanggan
                     </th>
-                    <th 
+                    <th
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('transaction_date')}
                     >
                       Tanggal Transaksi {getSortIcon('transaction_date')}
                     </th>
-                    <th 
+                    <th
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('estimated_completion')}
                     >
@@ -683,7 +693,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Layanan
                     </th>
-                    <th 
+                    <th
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('final_total')}
                     >
@@ -734,7 +744,14 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                                 <span className="font-medium">
                                   {detail.service?.name || detail.product?.name}
                                 </span>
-                                <span className="text-gray-500"> ({detail.quantity}{detail.service ? 'kg' : 'pcs'})</span>
+                                <span className="text-gray-500">
+                                  {' '}({formatQuantity(detail.quantity)}
+                                  {detail.service
+                                    ? (detail.service.price_type === 'per_kg' ? 'kg' :
+                                       detail.service.price_type === 'per_item' ? ' item' :
+                                       ' unit')
+                                    : 'pcs'})
+                                </span>
                                 {detail.is_express && (
                                   <span className="text-red-600 ml-1">⚡</span>
                                 )}
@@ -752,7 +769,7 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                             <div className="font-bold">{formatCurrency(trx.final_total)}</div>
                             {trx.discount_value > 0 && (
                               <div className="text-xs text-gray-500">
-                                Diskon: {trx.discount_type === "amount" 
+                                Diskon: {trx.discount_type === "amount"
                                   ? formatCurrency(trx.discount_value)
                                   : `${trx.discount_value}%`
                                 }
@@ -827,16 +844,16 @@ export default function Index({ transactions, auth, filters, stats, topCustomers
                 <div className="flex items-center justify-between">
                   <div className="flex-1 flex justify-between sm:hidden">
                     {transactions.prev_page_url && (
-                      <Link 
-                        href={transactions.prev_page_url} 
+                      <Link
+                        href={transactions.prev_page_url}
                         className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                       >
                         Previous
                       </Link>
                     )}
                     {transactions.next_page_url && (
-                      <Link 
-                        href={transactions.next_page_url} 
+                      <Link
+                        href={transactions.next_page_url}
                         className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
                       >
                         Next
